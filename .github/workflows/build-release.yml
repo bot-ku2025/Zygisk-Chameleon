@@ -47,9 +47,10 @@ jobs:
 
           # Create flashable zip
           cd build_module
-          TAG_VERSION="${GITHUB_REF_NAME:-v1.0.0}"
+          PROP_VERSION=$(grep '^version=' ../module.prop | cut -d'=' -f2)
+          TAG_VERSION="${GITHUB_REF_NAME:-$PROP_VERSION}"
           if [ "$TAG_VERSION" = "main" ] || [ -z "$TAG_VERSION" ]; then
-            TAG_VERSION="v1.0.0"
+            TAG_VERSION="${PROP_VERSION:-v1.1.0}"
           fi
           zip -r9 "../zygisk-chameleon-${TAG_VERSION}.zip" ./*
           cd ..

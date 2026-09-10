@@ -211,7 +211,7 @@ export const translations = {
     },
     about: {
       title: "Tentang Zygisk Chameleon",
-      badgeStable: "v1.0.0 Stable",
+      badgeStable: "v1.1.0 (Rilis Terbaru)",
       badgeArch: "Zygisk C++ Native (ARM64-v8a)",
       badgeEngine: "Zero-Trace Engine",
       creatorHeader: "Pengembang & Peneliti Keamanan",
@@ -444,7 +444,7 @@ export const translations = {
     },
     about: {
       title: "About Zygisk Chameleon",
-      badgeStable: "v1.0.0 Stable",
+      badgeStable: "v1.1.0 (Latest Release)",
       badgeArch: "Zygisk C++ Native (ARM64-v8a)",
       badgeEngine: "Zero-Trace Engine",
       creatorHeader: "Developer & Security Researcher",

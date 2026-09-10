@@ -6,6 +6,8 @@ import {
 import { Language, TabType, RootEnvironment, ExternalSpooferState, OtaCelahUpdateState, SpooferSourceType, RootModule } from '../types';
 import { translations } from '../locales/dictionary';
 import { ModuleAccessModal } from './ModuleAccessModal';
+import { APP_VERSION } from '../data/version';
+import { queryRealDeviceInfo } from '../utils/ksuBridge';
 import logoImg from '../assets/images/natural_chameleon_logo_1788962639417.jpg';
 
 interface UnifiedHeaderProps {
@@ -73,43 +75,37 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
       : `- ${spooferState.sourceName} (Active In-Use) -`;
   };
 
-  const handleToggleSpooferMode = () => {
+  const handleToggleSpooferMode = async () => {
     setIsHarmonizing(true);
-    setTimeout(() => {
-      const syncTime = isId ? 'Baru saja' : 'Just now';
-      if (spooferState.source === 'internal') {
-        setSpooferState({
-          source: 'sentinel',
-          sourceName: 'Sentinel.apk',
-          isDetected: true,
-          detectedPackage: 'org.lsposed.sentinel.faker',
-          detectedVersion: 'v3.8.2-pro (Active Hook)',
-          interceptedBrand: 'Samsung',
-          interceptedModel: 'SM-S928B (Galaxy S24 Ultra)',
-          interceptedAndroid: '14',
-          interceptedImeiMasked: '35824911******4',
-          interceptedAndroidId: '7f9a2c4e1b80d***',
-          isHarmonized: true,
-          lastSyncTimestamp: syncTime,
-        });
-      } else {
-        setSpooferState({
-          source: 'internal',
-          sourceName: 'Zygisk Chameleon Standalone',
-          isDetected: false,
-          detectedPackage: 'zygisk_chameleon_core',
-          detectedVersion: 'v1.0.0 (Native Generator)',
-          interceptedBrand: 'Samsung',
-          interceptedModel: 'SM-S928B (OneUI 6.1)',
-          interceptedAndroid: '14',
-          interceptedImeiMasked: isId ? 'Proteksi Mandiri Aktif' : 'Standalone Masking Active',
-          interceptedAndroidId: 'Dynamic Salted ID',
-          isHarmonized: true,
-          lastSyncTimestamp: syncTime,
-        });
-      }
+    const syncTime = isId ? 'Baru saja' : 'Just now';
+    try {
+      const liveInfo = await queryRealDeviceInfo();
+      setSpooferState((prev) => ({
+        ...prev,
+        source: 'internal',
+        sourceName: 'Zygisk Chameleon Standalone Engine',
+        isDetected: false,
+        detectedPackage: 'zygisk_chameleon_core',
+        detectedVersion: `${APP_VERSION} (Native Generator)`,
+        interceptedBrand: (liveInfo.brand as any) || prev.interceptedBrand || 'Xiaomi',
+        interceptedModel: liveInfo.model || prev.interceptedModel || 'Live Device',
+        interceptedAndroid: (liveInfo.androidVersion as any) || prev.interceptedAndroid || '14',
+        interceptedImeiMasked: isId ? 'Hardware Salted Invariant' : 'Hardware Salted Invariant',
+        interceptedAndroidId: 'Hardware Salted ID',
+        isHarmonized: true,
+        lastSyncTimestamp: syncTime,
+      }));
+    } catch {
+      setSpooferState((prev) => ({
+        ...prev,
+        source: 'internal',
+        sourceName: 'Zygisk Chameleon Standalone Engine',
+        isHarmonized: true,
+        lastSyncTimestamp: syncTime,
+      }));
+    } finally {
       setIsHarmonizing(false);
-    }, 300);
+    }
   };
 
   return (
@@ -136,7 +132,7 @@ export const UnifiedHeader: React.FC<UnifiedHeaderProps> = ({
                 <h1 className="text-base font-bold text-zinc-100 tracking-tight flex items-center gap-1.5">
                   Zygisk Chameleon
                   <span className="text-[10px] px-1.5 py-0.2 rounded font-mono font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-                    v1.0.0
+                    {APP_VERSION}
                   </span>
                 </h1>
                 <span className="hidden md:inline-block text-[11px] text-zinc-500">|</span>

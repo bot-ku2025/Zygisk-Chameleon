@@ -1,7 +1,7 @@
 id=zygisk_chameleon
 name=Zygisk Chameleon
-version=v1.0.0
-versionCode=100
+version=v1.1.0
+versionCode=110
 author=STNK
 description=Adaptive per-app root cloaking, ephemeral namespace isolation, and synchronized kernel identity spoofing with native WebUI.
 support=https://t.me/MuhammadDimasRidho

@@ -5,7 +5,7 @@ ui_print "**********************************************"
 ui_print "          ZYGISK CHAMELEON                    "
 ui_print "     Adaptive Root Cloaking Engine            "
 ui_print "          Author: STNK                        "
-ui_print "          Version: v1.0.0                     "
+ui_print "          Version: v1.1.0                     "
 ui_print "**********************************************"
 
 # Verify Root Environment

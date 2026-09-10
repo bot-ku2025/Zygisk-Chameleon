@@ -7,6 +7,7 @@ import {
 import { Language, TargetApp, DeviceInfo, RootEnvironment } from '../types';
 import { translations } from '../locales/dictionary';
 import { queryRealDeviceInfo, detectRealRootEnvironment } from '../utils/ksuBridge';
+import { APP_VERSION } from '../data/version';
 
 interface SettingsTabProps {
   lang: Language;
@@ -73,6 +74,9 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({ lang, setLang }) => {
                 </h3>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
                   {rootEnv?.manager || 'Live Root'}
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-zinc-800 text-zinc-300 border border-zinc-700">
+                  {APP_VERSION}
                 </span>
               </div>
               <p className="text-xs text-zinc-400 mt-0.5">
