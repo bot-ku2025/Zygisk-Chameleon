@@ -1,0 +1,11 @@
+id=zygisk_chameleon
+name=Zygisk Chameleon
+version=v1.0.0
+versionCode=100
+author=STNK
+description=Adaptive per-app root cloaking, ephemeral namespace isolation, and synchronized kernel identity spoofing with native WebUI.
+support=https://t.me/MuhammadDimasRidho
+updateJson=https://raw.githubusercontent.com/mdimasridho/zygisk-chameleon/main/update.json
+minMagisk=26000
+minKernelSU=11000
+minAPatch=10700

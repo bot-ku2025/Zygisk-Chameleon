@@ -1,0 +1,142 @@
+name: Build and Release Zygisk Chameleon Module
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci || npm install
+
+      - name: Build WebUI
+        run: npm run build
+
+      - name: Prepare Flashable Module Package
+        run: |
+          mkdir -p build_module/webroot
+          cp -r dist/* build_module/webroot/
+          
+          # Copy module metadata and scripts
+          cp module.prop build_module/ 2>/dev/null || :
+          cp customize.sh build_module/ 2>/dev/null || :
+          cp service.sh build_module/ 2>/dev/null || :
+          cp post-fs-data.sh build_module/ 2>/dev/null || :
+          cp action.sh build_module/ 2>/dev/null || :
+          cp sepolicy.rule build_module/ 2>/dev/null || :
+          cp system.prop build_module/ 2>/dev/null || :
+          cp config.json build_module/ 2>/dev/null || :
+          cp README.md build_module/ 2>/dev/null || :
+
+          # If standalone scripts don't exist in root, build from repository
+          if [ ! -f "build_module/module.prop" ]; then
+            cat << 'EOF' > build_module/module.prop
+id=zygisk_chameleon
+name=Zygisk Chameleon
+version=v1.0.0
+versionCode=100
+author=STNK
+description=Adaptive per-app root cloaking, ephemeral namespace isolation, and synchronized kernel identity spoofing with native WebUI.
+support=https://t.me/MuhammadDimasRidho
+updateJson=https://raw.githubusercontent.com/${{ github.repository }}/main/update.json
+minMagisk=26000
+minKernelSU=11000
+minAPatch=10700
+EOF
+          fi
+
+          if [ ! -f "build_module/customize.sh" ]; then
+            cat << 'EOF' > build_module/customize.sh
+#!/system/bin/sh
+SKIPUNZIP=1
+ui_print "**********************************************"
+ui_print "          ZYGISK CHAMELEON                    "
+ui_print "     Adaptive Root Cloaking Engine            "
+ui_print "          Author: STNK                        "
+ui_print "**********************************************"
+ui_print "- Extracting module files to $MODPATH..."
+unzip -o "$ZIPFILE" -x 'META-INF/*' -d "$MODPATH" >/dev/null 2>&1
+CONF_DIR="/data/adb/zygisk_chameleon"
+mkdir -p "$CONF_DIR"
+mkdir -p "$CONF_DIR/profiles"
+chmod 755 "$CONF_DIR"
+set_perm_recursive "$MODPATH" 0 0 0755 0644
+set_perm "$MODPATH/service.sh" 0 0 0755
+set_perm "$MODPATH/post-fs-data.sh" 0 0 0755
+set_perm "$MODPATH/action.sh" 0 0 0755
+ui_print " Installation Finished! Please Reboot phone.  "
+ui_print "**********************************************"
+EOF
+          fi
+
+          if [ ! -f "build_module/service.sh" ]; then
+            cat << 'EOF' > build_module/service.sh
+#!/system/bin/sh
+MODDIR=${0%/*}
+CONF_DIR="/data/adb/zygisk_chameleon"
+until [ "$(getprop sys.boot_completed)" = "1" ]; do
+    sleep 2
+done
+if [ -d "$MODDIR/webroot" ]; then
+    chmod -R 755 "$MODDIR/webroot"
+fi
+EOF
+          fi
+
+          if [ ! -f "build_module/post-fs-data.sh" ]; then
+            cat << 'EOF' > build_module/post-fs-data.sh
+#!/system/bin/sh
+MODDIR=${0%/*}
+CONF_DIR="/data/adb/zygisk_chameleon"
+mkdir -p "$CONF_DIR/run"
+chmod 700 "$CONF_DIR/run"
+EOF
+          fi
+
+          if [ ! -f "build_module/action.sh" ]; then
+            cat << 'EOF' > build_module/action.sh
+#!/system/bin/sh
+echo "=== Zygisk Chameleon ==="
+echo "Status: Active"
+EOF
+          fi
+
+          cd build_module
+          zip -r9 ../zygisk-chameleon-${{ github.ref_name || 'v1.0.0' }}.zip ./*
+          cd ..
+
+      - name: Upload Flashable Module Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zygisk-chameleon-flashable-zip
+          path: zygisk-chameleon-*.zip
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: zygisk-chameleon-*.zip
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

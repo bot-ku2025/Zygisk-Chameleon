@@ -1,0 +1,8 @@
+{
+  "name": "Zygisk Chameleon",
+  "description": "Adaptive per-app root cloaking and synchronized kernel identity spoofing WebUI",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
