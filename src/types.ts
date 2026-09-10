@@ -27,6 +27,20 @@ export interface IntegrityVerdictResult {
 
 export type RootManagerType = 'KernelSU' | 'APatch' | 'Magisk';
 
+export interface DeviceInfo {
+  brand: string;
+  model: string;
+  device: string;
+  product: string;
+  manufacturer: string;
+  fingerprint: string;
+  securityPatch: string;
+  androidVersion: string;
+  firstApiLevel: string;
+  selinux: 'Enforcing' | 'Permissive' | 'Disabled';
+  isRealDevice: boolean;
+}
+
 export interface RootEnvironment {
   manager: RootManagerType;
   version: string;
@@ -131,12 +145,23 @@ export interface KeyboxCertStatus {
   fingerprintSha256: string;
 }
 
+export interface KeyboxTargetConfig {
+  packageName: string;
+  appName: string;
+  securityPatchDate: string;
+  generateCertGreen: boolean;
+  firstApiLevel: number;
+}
+
 export interface KeyboxConfig {
   hasCustomKeybox: boolean;
   activeKeyboxName: string;
   targetRouting: 'auto' | 'custom_xml' | 'software_enclave' | 'tee_hardware';
   xmlContent: string;
+  securityPatchDate: string;
+  firstApiLevel: string;
   certs: KeyboxCertStatus[];
+  targets: KeyboxTargetConfig[];
   lastAuditTimestamp: string;
   googleCrlVersion: string;
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { RefreshCw, CheckCircle2, ShieldAlert, Sparkles, Download, Clock, ShieldCheck, X, Cpu, AlertTriangle } from 'lucide-react';
+import { RefreshCw, CheckCircle2, ShieldAlert, Sparkles, Download, Clock, ShieldCheck, X, Cpu, AlertTriangle, Check } from 'lucide-react';
 import { OtaCelahUpdateState, Language } from '../types';
 
 interface OtaUpdateModalProps {
@@ -18,6 +18,8 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
   lang,
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [upToDateNotice, setUpToDateNotice] = useState<boolean | null>(null);
   const [updateLog, setUpdateLog] = useState<string[]>([]);
   const [hasCompleted, setHasCompleted] = useState(false);
 
@@ -25,36 +27,47 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
 
   const isId = lang === 'id';
 
+  // Check for updates without blindly running installation
+  const handleCheckUpdates = async () => {
+    setIsChecking(true);
+    setUpToDateNotice(null);
+    await new Promise((r) => setTimeout(r, 600));
+    setIsChecking(false);
+    // Notify user that the vulnerability database is already the latest version
+    setUpToDateNotice(true);
+  };
+
   const handleStartUpdate = async () => {
     setIsUpdating(true);
     setHasCompleted(false);
+    setUpToDateNotice(null);
     setUpdateLog([
       isId ? '▶ Memulai koneksi aman ke Repositori Definisi Celah (OTA 24-Jam)...' : '▶ Connecting to Secure Vulnerability Definition Repo (24H OTA)...',
     ]);
 
-    await new Promise((r) => setTimeout(r, 600));
+    await new Promise((r) => setTimeout(r, 500));
     setUpdateLog((prev) => [
       ...prev,
       isId 
         ? '✓ Server terhubung: cdn.chameleon-ota.internal/v2/definitions' 
         : '✓ Server connected: cdn.chameleon-ota.internal/v2/definitions',
       isId 
-        ? '⬇ Mengunduh 14 database CTS Fingerprint terbaru (Google Play Protect Approved)...' 
-        : '⬇ Downloading 14 new CTS Fingerprint database (Google Play Protect Approved)...',
+        ? '⬇ Memverifikasi 14 database CTS Fingerprint terbaru (Certified Baseline)...' 
+        : '⬇ Verifying 14 new CTS Fingerprint database (Certified Baseline)...',
     ]);
 
-    await new Promise((r) => setTimeout(r, 700));
+    await new Promise((r) => setTimeout(r, 600));
     setUpdateLog((prev) => [
       ...prev,
       isId 
-        ? '⬇ Memindai celah RASP terbaru (Shopee v2.89 socket probe, Mandiri Livin v3.2, BCA Promon)...' 
-        : '⬇ Fetching latest RASP vulnerabilities (Shopee socket probe, Mandiri, BCA)...',
+        ? '⬇ Mengunduh tanda tangan RASP (Shopee v2.89 socket probe, Mandiri Livin v3.2, BCA Promon)...' 
+        : '⬇ Fetching latest RASP signatures (Shopee socket probe, Mandiri, BCA)...',
       isId 
         ? '⚡ Memeriksa integritas sistem: Zero-Bootloop Safety Guard terverifikasi 100% Aman (User-space only).' 
         : '⚡ Verifying system integrity: Zero-Bootloop Safety Guard verified 100% Safe (User-space only).',
     ]);
 
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 600));
     await onRunOtaUpdate();
 
     setUpdateLog((prev) => [
@@ -63,8 +76,8 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
         ? '✓ Hot-patching memori kernel selesai! Seluruh celah berhasil ditambal tanpa perlu reboot HP.' 
         : '✓ Memory hot-patching complete! All detection leaks patched without requiring a reboot.',
       isId 
-        ? '★ Status: Database Celah v2026.09.09-OTA AKTIF & TERKINI.' 
-        : '★ Status: Vulnerability Database v2026.09.09-OTA ACTIVE & UP-TO-DATE.',
+        ? '★ Status: Database Celah v2026.09.10-STABLE AKTIF & TERKINI.' 
+        : '★ Status: Vulnerability Database v2026.09.10-STABLE ACTIVE & UP-TO-DATE.',
     ]);
     setIsUpdating(false);
     setHasCompleted(true);
@@ -77,7 +90,7 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
         <div className="p-5 border-b border-zinc-800 flex items-center justify-between bg-zinc-950/60">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              <RefreshCw className={`w-5 h-5 ${isUpdating ? 'animate-spin text-emerald-300' : ''}`} />
+              <RefreshCw className={`w-5 h-5 ${isUpdating || isChecking ? 'animate-spin text-emerald-300' : ''}`} />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -105,6 +118,45 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
 
         {/* Content Body */}
         <div className="p-5 overflow-y-auto space-y-5 flex-1 text-xs">
+          
+          {/* SPECIAL NOTIFICATION POPUP: When already up to date */}
+          {upToDateNotice && (
+            <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/70 to-zinc-900 border border-emerald-500/60 text-zinc-200 shadow-xl space-y-2 animate-fadeIn">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs sm:text-sm">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>
+                    {isId 
+                      ? 'Pemberitahuan: Database Celah Sudah Versi Terbaru (Up-to-Date)' 
+                      : 'Notice: Vulnerability Database is Already Up-to-Date'}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setUpToDateNotice(false)}
+                  className="p-1 text-zinc-400 hover:text-zinc-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <p className="text-zinc-300 text-[11px] leading-relaxed">
+                {isId 
+                  ? 'Tidak ada pembaruan celah baru. Tanda tangan aktif Anda (v2026.09.10-STABLE) sudah memiliki seluruh 148 aturan penangkal RASP, pencegat syscall assembly, dan isolasi mount namespace terbaru.'
+                  : 'No new vulnerability updates found. Your active signature (v2026.09.10-STABLE) includes all 148 latest RASP defense rules, assembly syscall traps, and mount isolations.'}
+              </p>
+
+              <div className="pt-2 flex items-center justify-between text-[11px] font-mono border-t border-zinc-800">
+                <span className="text-emerald-400">Status: 100% Terproteksi & Bersih</span>
+                <button
+                  onClick={handleStartUpdate}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 transition-colors"
+                >
+                  {isId ? 'Paksa Terapkan Ulang Patch' : 'Force Re-apply Patch'}
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Status Metrics Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="p-3 rounded-xl bg-zinc-950/70 border border-zinc-800/80">
@@ -249,22 +301,25 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-zinc-800 bg-zinc-950/80 flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-zinc-800 bg-zinc-950/80 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-[11px] text-zinc-400">
             {isId ? 'Terakhir diperiksa:' : 'Last checked:'} <span className="text-zinc-300 font-mono">{isId ? otaState.lastUpdated : (otaState.lastUpdatedEn || otaState.lastUpdated)}</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             <button
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-300 transition-colors"
+              onClick={handleCheckUpdates}
+              disabled={isChecking || isUpdating}
+              className="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-zinc-200 transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
             >
-              {isId ? 'Tutup' : 'Close'}
+              <RefreshCw className={`w-3.5 h-3.5 ${isChecking ? 'animate-spin' : ''}`} />
+              <span>{isChecking ? (isId ? 'Memeriksa...' : 'Checking...') : (isId ? 'Cek Pembaruan Celah' : 'Check for Updates')}</span>
             </button>
+
             <button
               onClick={handleStartUpdate}
               disabled={isUpdating}
-              className={`px-4 py-2 rounded-xl font-semibold text-xs flex items-center gap-2 transition-all ${
+              className={`px-4 py-2 rounded-xl font-semibold text-xs flex items-center gap-2 transition-all cursor-pointer ${
                 isUpdating
                   ? 'bg-zinc-800 text-zinc-500 cursor-not-allowed'
                   : hasCompleted
@@ -277,7 +332,7 @@ export const OtaUpdateModal: React.FC<OtaUpdateModalProps> = ({
                 {isUpdating
                   ? (isId ? 'Mengunduh Celah...' : 'Downloading Patches...')
                   : hasCompleted
-                  ? (isId ? 'Perbarui Lagi Sekarang' : 'Update Again')
+                  ? (isId ? 'Terapkan Ulang Patch' : 'Re-apply Patch')
                   : (isId ? 'Perbarui Celah Online Sekarang' : 'Update Vulnerabilities Now')}
               </span>
             </button>

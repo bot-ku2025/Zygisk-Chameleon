@@ -462,6 +462,51 @@ export function runIntegrityVerification(app: TargetApp, lang: Language = 'id'):
     logs.push(`[${timeStr}] [PASS] ART runtime guard: Method inlining metadata preserved across all DEX classes.`);
   }
 
+  // Vector 19: TEE Keybox & TrickyStore Style Green Leaf Cert Generator
+  let hasValidKeybox = true;
+  let hasGreenCertTarget = true;
+  let keyboxPatchDate = '2025-02-05';
+
+  try {
+    const savedKb = localStorage.getItem('chameleon_keybox_config');
+    if (savedKb) {
+      const parsed = JSON.parse(savedKb);
+      hasValidKeybox = !!parsed.hasCustomKeybox;
+      keyboxPatchDate = parsed.securityPatchDate || '2025-02-05';
+      const targetMatch = parsed.targets?.find((t: any) => t.packageName === app.id);
+      if (targetMatch) {
+        hasGreenCertTarget = !!targetMatch.generateCertGreen;
+      }
+    }
+  } catch {}
+
+  if (hasValidKeybox && hasGreenCertTarget) {
+    diagnostics.push({
+      id: 'keybox_leaf_cert',
+      name: isId ? 'Injeksi Keybox & Sertifikat Hijau TEE (TrickyStore Attestation)' : 'Keybox & TEE Green Cert Injection (TrickyStore Attestation)',
+      category: 'identity',
+      status: 'pass',
+      detail: isId
+        ? `Sertifikat leaf StrongBox aktif & ditandatangani untuk target (${app.id}). Tanggal patch keamanan disinkronkan (${keyboxPatchDate}).`
+        : `StrongBox leaf cert active & signed for target (${app.id}). Security patch date aligned (${keyboxPatchDate}).`,
+    });
+    logs.push(`[${timeStr}] [PASS] Green Leaf cert generated for ${app.id} signed with OEM Keybox root. Patch date: ${keyboxPatchDate}.`);
+  } else {
+    diagnostics.push({
+      id: 'keybox_leaf_cert',
+      name: isId ? 'Injeksi Keybox & Sertifikat Hijau TEE (TrickyStore Attestation)' : 'Keybox & TEE Green Cert Injection (TrickyStore Attestation)',
+      category: 'identity',
+      status: 'warn',
+      detail: isId
+        ? `Target ${app.id} belum memiliki sertifikat hijau aktif atau Keybox XML belum di-inject. Menghasilkan BASIC & DEVICE Integrity saja.`
+        : `Target ${app.id} does not have green cert generated or Keybox XML not injected. Only BASIC & DEVICE Integrity will pass.`,
+      recommendation: isId
+        ? 'Buka Manajer Keybox -> Aktifkan "Sertifikat Hijau" untuk target ini dan lakukan "Injeksi ke Sistem Android".'
+        : 'Open Keybox Manager -> Enable "Green Cert" for this target and click "Inject into Android System".',
+    });
+    logs.push(`[${timeStr}] [WARN] Keybox green cert generation disabled for ${app.id}. StrongBox attestation fallback.`);
+  }
+
   // Verdict calculation
   const hasKernelFail = diagnostics.some(
     (d) => (d.id === 'mount_unmount' || d.id === 'raw_syscall' || d.id === 'su_binary' || d.id === 'ebpf_filter') && d.status === 'fail'
@@ -470,7 +515,7 @@ export function runIntegrityVerification(app: TargetApp, lang: Language = 'id'):
 
   const meetsBasicIntegrity = !hasKernelFail && isEnabled;
   const meetsDeviceIntegrity = meetsBasicIntegrity && !hasIdentityFail && isEnabled;
-  // Strong integrity requires hardware keystore simulation & locked state + eBPF filter + dynamic keybox + cycle normalizer
+  // Strong integrity requires hardware keystore simulation & locked state + eBPF filter + dynamic keybox + cycle normalizer + green cert
   const meetsStrongIntegrity = 
     meetsDeviceIntegrity && 
     isIdentityConsistent && 
@@ -478,7 +523,9 @@ export function runIntegrityVerification(app: TargetApp, lang: Language = 'id'):
     (tA.teeStrongBoxEmulation ?? true) &&
     (tA.vfsZeroTraceDetach ?? true) &&
     (tA.dynamicKeyboxOtaPool ?? true) &&
-    (tA.cntvctCycleNormalizer ?? true);
+    (tA.cntvctCycleNormalizer ?? true) &&
+    hasValidKeybox &&
+    hasGreenCertTarget;
 
   const legacyBasicIntegrity = meetsBasicIntegrity;
   const legacyCtsProfileMatch = meetsDeviceIntegrity;

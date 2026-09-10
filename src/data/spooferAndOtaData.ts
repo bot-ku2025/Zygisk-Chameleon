@@ -56,19 +56,19 @@ export const INITIAL_DYNAMIC_OTA_TOGGLES: DynamicOtaToggle[] = [
 ];
 
 export const INITIAL_SPOOFER_STATE: ExternalSpooferState = {
-  source: 'sentinel',
-  sourceName: 'Sentinel.apk',
-  isDetected: true,
-  detectedPackage: 'org.lsposed.sentinel.faker',
-  detectedVersion: 'v3.8.2-pro (Active Hook)',
-  interceptedBrand: 'Samsung',
-  interceptedModel: 'SM-S928B (Galaxy S24 Ultra)',
+  source: 'internal',
+  sourceName: 'Zygisk Chameleon Standalone Engine',
+  isDetected: false,
+  detectedPackage: 'zygisk_chameleon',
+  detectedVersion: 'v1.0.0 (Native Core)',
+  interceptedBrand: 'Xiaomi',
+  interceptedModel: 'Live Device Profile',
   interceptedAndroid: '14',
-  interceptedImeiMasked: '35824911******4',
-  interceptedAndroidId: '7f9a2c4e1b80d***',
+  interceptedImeiMasked: 'Hardware Salt Invariant',
+  interceptedAndroidId: 'Hardware Dynamic ID',
   isHarmonized: true,
-  lastSyncTimestamp: 'Hari ini, 09:40 WIB',
-  lastSyncTimestampEn: 'Today, 09:40 UTC+7',
+  lastSyncTimestamp: 'Tersinkronisasi',
+  lastSyncTimestampEn: 'Synchronized',
 };
 
 export const INITIAL_OTA_STATE: OtaCelahUpdateState = {
